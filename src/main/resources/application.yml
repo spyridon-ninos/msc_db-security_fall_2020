@@ -1,0 +1,105 @@
+logging:
+  config: classpath:logback-spring.xml
+  file:
+    name: dbprivacy.log
+
+spring:
+  main:
+    banner-mode: off
+  datasource:
+    schema: classpath:schema.sql
+    data: classpath:data.sql
+    url: jdbc:h2:mem:shootings_db
+    driver-class-name: org.h2.Driver
+
+sql:
+  queries:
+    countRecords: >-
+      SELECT
+        count(*)
+      FROM
+        shootings_anon
+
+    uniqueRecords: >-
+      WITH
+        unique_qis
+      AS
+        (SELECT
+          armed,
+          age,
+          gender,
+          race,
+          city,
+          count(*) as num_of_records
+        FROM
+          shootings_anon
+        GROUP BY
+          armed,
+          age,
+          gender,
+          race,
+          city
+        HAVING
+          count(*) < 2)
+      SELECT
+        count(*)
+      FROM
+        unique_qis
+
+    distinctArmedValues: >-
+      SELECT DISTINCT
+        armed
+      FROM
+        shootings_anon
+
+    distinctAgeValues: >-
+      SELECT DISTINCT
+        age
+      FROM
+        shootings_anon
+
+    distinctGenderValues: >-
+      SELECT DISTINCT
+        gender
+      FROM
+        shootings_anon
+
+    distinctRaceValues: >-
+      SELECT DISTINCT
+        race
+      FROM
+        shootings_anon
+
+    distinctCityPerStateValues: >-
+      SELECT DISTINCT
+        state,
+        city
+      FROM
+        shootings
+
+    distinctCityValues: >-
+      SELECT DISTINCT
+        city
+      FROM
+        shootings_anon
+
+    anonymizedRecords: >-
+      SELECT
+        armed,
+        age,
+        gender,
+        race,
+        city
+      FROM
+        shootings_anon
+
+    recordsPerArmedValues: >-
+      SELECT
+        armed,
+        count(*) as numOfRecords
+      FROM
+        shootings_anon
+      GROUP BY
+        armed
+      ORDER BY
+        armed

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.4.0</version>
+	</parent>
+
+	<groupId>gr.aegean.msc</groupId>
+	<artifactId>dbprivacy</artifactId>
+	<version>1.0.0</version>
+	<name>dbprivacy</name>
+	<description>DB Privacy Project - MSc, Aegean Uni., Fall 2020</description>
+
+	<contributors>
+		<contributor>
+			<name>Spyridon Ninos</name>
+		</contributor>
+		<contributor>
+			<name>Christos Skatharoudis</name>
+		</contributor>
+		<contributor>
+			<name>Margarita Mpogdanou</name>
+		</contributor>
+	</contributors>
+
+	<properties>
+		<java.version>14</java.version>
+		<libarx.version>3.8.0</libarx.version>
+		<h2.version>1.4.200</h2.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-autoconfigure-processor</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.deidentifier.arx</groupId>
+			<artifactId>arx</artifactId>
+			<version>${libarx.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>${h2.version}</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<executable>true</executable>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
