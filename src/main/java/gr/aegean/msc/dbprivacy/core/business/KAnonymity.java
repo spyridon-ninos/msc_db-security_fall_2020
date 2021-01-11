@@ -1,51 +1,120 @@
 package gr.aegean.msc.dbprivacy.core.business;
 
-import org.deidentifier.arx.ARXAnonymizer;
-import org.deidentifier.arx.ARXConfiguration;
-import org.deidentifier.arx.ARXLattice;
-import org.deidentifier.arx.ARXResult;
-import org.deidentifier.arx.Data;
-import org.deidentifier.arx.criteria.DistinctLDiversity;
+import gr.aegean.msc.dbprivacy.core.model.AnonymizedRecord;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.stream.IntStream;
+import static gr.aegean.msc.dbprivacy.core.business.Utils.copy;
 
-@Component
 public final class KAnonymity {
 
     private final Logger logger = LoggerFactory.getLogger(KAnonymity.class);
 
-    public void run(Data.DefaultData data) {
-        IntStream.range(1, 11)
-                 .forEach(k -> checkKAnonymity(data, k));
+    private final List<AnonymizedRecord> anonymizedRecords;
+    private final GeneralizationBuilder generalizationBuilder;
+
+    private Map<Integer, List<AnonymizedRecord>> kAnonymizedData;
+    private boolean hasStartedProcessing = false;
+
+    public Map<Integer, List<AnonymizedRecord>> getkAnonymizedData() {
+        return Optional.ofNullable(kAnonymizedData)
+                       .map(Collections::unmodifiableMap)
+                       .orElse(Collections.emptyMap());
     }
 
-    private void checkKAnonymity(Data.DefaultData data, int k) {
+    public KAnonymity(List<AnonymizedRecord> anonymizedRecords, GeneralizationBuilder generalizationBuilder) {
+        this.anonymizedRecords = anonymizedRecords;
+        this.generalizationBuilder = generalizationBuilder;
+    }
 
-        ARXConfiguration config = ARXConfiguration.create();
-        config.addPrivacyModel(new org.deidentifier.arx.criteria.KAnonymity(k));
-        config.addPrivacyModel(new DistinctLDiversity("armed", 1));
+    /**
+     * checks if the provided anonymized record list satisfies k-anonymity
+     *
+     * @param k the equivalence class size
+     *
+     * @return true if it satisfies, false if not
+     */
+    public boolean check(int k) {
 
-        ARXAnonymizer anonymizer = new ARXAnonymizer();
-        ARXResult result;
-        try {
-            result = anonymizer.anonymize(data, config);
-            data.getHandle().release(); // need this for every new run we perform
-        } catch (IOException ex) {
-            logger.error("Received exception: {}", ex.getMessage());
-            logger.debug("{}", ex.getMessage(), ex);
-            return;
+        logger.debug("Checking k-anonymity for k = {}", k);
+
+        if (k < 1) {
+            throw new IllegalArgumentException("k-Anonymity Equivalence Class size cannot be less than 1. Aborting.");
         }
 
-        ARXLattice.ARXNode optimum = result.getGlobalOptimum();
-        if (optimum == null) {
-            logger.warn("No solution found for k={}", k);
+        var copiedAnonymizedRecords = copy(anonymizedRecords);
+        do {
+            if (hasStartedProcessing) {
+                logger.debug("Generalizing the dataset");
+                generalizationBuilder.increaseGeneralizationDomain(copiedAnonymizedRecords);
+                logger.debug("Generalized dataset: {}", copiedAnonymizedRecords);
+            }
+
+            kAnonymizedData = splitToEquivalenceClasses(copiedAnonymizedRecords);
+
+            if (satisfiesAnonymity(k)) {
+                logger.warn("It satisfies {}-anonymity", k);
+                return true;
+            }
+
+            logger.warn("It does not satisfy {}-anonymity", k);
+        } while(generalizationBuilder.isNotFullySuppressed());
+
+        return false;
+    }
+
+    private Map<Integer, List<AnonymizedRecord>> splitToEquivalenceClasses(List<AnonymizedRecord> anonymizedRecords) {
+        logger.debug("Splitting the dataset to equivalence classes");
+        hasStartedProcessing = true;
+        kAnonymizedData = new HashMap<>();
+        anonymizedRecords.forEach(record -> assignToEquivalenceClass(record, kAnonymizedData));
+        logger.debug("Result: {}", kAnonymizedData);
+        return kAnonymizedData;
+    }
+
+    private void assignToEquivalenceClass(AnonymizedRecord record, Map<Integer, List<AnonymizedRecord>> kAnonymizedData) {
+
+        if (kAnonymizedData.keySet().isEmpty()) {
+
+            var equivalenceClass = new ArrayList<AnonymizedRecord>();
+            equivalenceClass.add(record);
+            kAnonymizedData.put(1, equivalenceClass);
+
         } else {
-            int totalGeneralizationLevel = optimum.getTotalGeneralizationLevel();
-            logger.warn("Solution found for k={}. Information loss min: {}%, max: {}%. Total Generalization level: {}", k, optimum.getLowestScore(), optimum.getHighestScore(), totalGeneralizationLevel);
+
+            var equivalenceClass = kAnonymizedData.keySet()
+                                                  .stream()
+                                                  .map(kAnonymizedData::get)
+                                                  .filter(equivClass -> record.isEquivalent(equivClass.get(0)))
+                                                  .findAny()
+                                                  .orElse(new ArrayList<>());
+
+            if (equivalenceClass.isEmpty()) {
+                int classNumber = kAnonymizedData.keySet().size() + 1;
+                kAnonymizedData.put(classNumber, equivalenceClass);
+            }
+
+            equivalenceClass.add(record);
         }
+    }
+
+    private boolean satisfiesAnonymity(int ecSize) {
+        logger.warn("\n===================================================================");
+        getkAnonymizedData().values()
+                            .forEach(equivClass -> logger.warn("size: {} : {}", equivClass.size(), equivClass.get(0)));
+
+        return getkAnonymizedData().values()
+                                   .stream()
+                                   .allMatch(equivClass -> equivClass.size() >= ecSize);
+    }
+
+    public double getInformationLoss() {
+        return generalizationBuilder.getInformationLoss();
     }
 }

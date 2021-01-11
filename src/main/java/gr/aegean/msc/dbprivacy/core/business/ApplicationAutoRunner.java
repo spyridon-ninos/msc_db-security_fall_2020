@@ -2,15 +2,13 @@ package gr.aegean.msc.dbprivacy.core.business;
 
 import gr.aegean.msc.dbprivacy.core.infra.DbUtils;
 import gr.aegean.msc.dbprivacy.core.model.CityStateTuple;
-import org.deidentifier.arx.Data;
+import java.text.DecimalFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-
-import java.text.DecimalFormat;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -22,18 +20,15 @@ public class ApplicationAutoRunner {
     private final Logger logger = LoggerFactory.getLogger(ApplicationAutoRunner.class);
 
     private final DbUtils dbUtils;
-    private final KAnonymity kAnonymity;
-    private final HierarchyBuilder hierarchyBuilder;
+    private final GeneralizationBuilder generalizationBuilder;
 
     @Autowired
     public ApplicationAutoRunner(
             DbUtils dbUtils,
-            KAnonymity kAnonymity,
-            HierarchyBuilder hierarchyBuilder
+            GeneralizationBuilder generalizationBuilder
     ) {
         this.dbUtils = dbUtils;
-        this.kAnonymity = kAnonymity;
-        this.hierarchyBuilder = hierarchyBuilder;
+        this.generalizationBuilder = generalizationBuilder;
     }
 
     @EventListener
@@ -44,25 +39,25 @@ public class ApplicationAutoRunner {
         logger.warn("\nUsing the dataset from: https://www.kaggle.com/ahsen1330/us-police-shootings");
 
         var totalRecords = dbUtils.getNumOfRecords();
-        logger.warn("Loaded {} anonymized records (name excluded, QIs: race, gender, age, SA: armed, Insensitive: city)\n", totalRecords);
+        logger.warn("Loaded {} anonymized records (Identifying: name (excluded), QI: race, gender, age, SA: armed, Insensitive: city)\n", totalRecords);
 
         var uniqueRecords = dbUtils.getUniqueRecords();
 
         if (uniqueRecords > 0) {
             var percentage = ((double) uniqueRecords / totalRecords) * 100;
-            logger.warn("Found {} unique records - {}% of the total set\n", uniqueRecords, new DecimalFormat("##.##").format(percentage));
+            var formattedPercentage = new DecimalFormat("##.##").format(percentage);
+            logger.warn("Found {} unique records - {}% of the total set\n", uniqueRecords, formattedPercentage);
         } else {
             logger.warn("Found no unique records\n");
         }
 
-//        if (logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
 
             var recordsPerArmedValues = dbUtils.getRecordsPerArmedValues();
             logger.warn("Records per armed: ");
-            recordsPerArmedValues.keySet().stream().forEach(key -> logger.warn("{}: {}", key, recordsPerArmedValues.get(key)));
+            recordsPerArmedValues.keySet().forEach(key -> logger.warn("{}: {}", key, recordsPerArmedValues.get(key)));
             logger.warn("\n");
 
-        if (logger.isDebugEnabled()) {
             var ageValues = String.join(", ", dbUtils.getDistinctAgeValues());
             logger.warn("Age category: {}\n", ageValues);
 
@@ -81,7 +76,12 @@ public class ApplicationAutoRunner {
             logger.warn("States -> cities: {}", cityStateValuesMap);
         }
 
-        Data.DefaultData data = hierarchyBuilder.loadData(dbUtils.getAnonymizedRecords(), dbUtils.getDistinctCityStateValues());
-        kAnonymity.run(data);
+        var anonymizedRecords = dbUtils.getAnonymizedRecords();
+
+        var kAnonymizer = new KAnonymity(anonymizedRecords, generalizationBuilder);
+
+        if (kAnonymizer.check(2)) {
+            logger.warn("Got a solution for k = 2, information loss: {}", String.format("%,2.2f%%", kAnonymizer.getInformationLoss()));
+        }
     }
 }

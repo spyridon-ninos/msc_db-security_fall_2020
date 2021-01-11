@@ -90,12 +90,24 @@ public final class AnonymizedRecord {
 
     @Override
     public String toString() {
-        return "AnonymizedRecord{" +
-                "armed='" + armed + '\'' +
-                ", age='" + age + '\'' +
+        return  "[age='" + age + '\'' +
                 ", gender='" + gender + '\'' +
                 ", race='" + race + '\'' +
                 ", city='" + city + '\'' +
-                '}';
+                ']';
+    }
+
+    public boolean isEquivalent(Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (other == null || getClass() != other.getClass()) {
+            return false;
+        }
+        final AnonymizedRecord that = (AnonymizedRecord) other;
+        return Objects.equals(age, that.age) &&
+                Objects.equals(gender, that.gender) &&
+                Objects.equals(race, that.race) &&
+                Objects.equals(city, that.city);
     }
 }
