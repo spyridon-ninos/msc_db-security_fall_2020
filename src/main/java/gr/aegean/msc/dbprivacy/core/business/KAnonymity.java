@@ -107,7 +107,7 @@ public final class KAnonymity {
     private boolean satisfiesAnonymity(int ecSize) {
         logger.warn("\n===================================================================");
         getkAnonymizedData().values()
-                            .forEach(equivClass -> logger.warn("size: {} : {}", equivClass.size(), equivClass.get(0)));
+                            .forEach(equivClass -> logger.warn("class size: {}, QI values: {}", equivClass.size(), equivClass.get(0)));
 
         return getkAnonymizedData().values()
                                    .stream()

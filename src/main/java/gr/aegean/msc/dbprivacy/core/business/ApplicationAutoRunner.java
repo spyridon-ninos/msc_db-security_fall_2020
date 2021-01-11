@@ -81,7 +81,17 @@ public class ApplicationAutoRunner {
         var kAnonymizer = new KAnonymity(anonymizedRecords, generalizationBuilder);
 
         if (kAnonymizer.check(2)) {
-            logger.warn("Got a solution for k = 2, information loss: {}", String.format("%,2.2f%%", kAnonymizer.getInformationLoss()));
+            String msg = String.format("%,2.2f%%", kAnonymizer.getInformationLoss());
+            logger.warn("Got a solution for k = 2, information loss: {}", msg);
+        } else {
+            logger.error("No k-anonymity solution found for k = 2");
+        }
+
+        var lDiversity = new LDiversity(kAnonymizer.getkAnonymizedData());
+        if (lDiversity.check(2)) {
+            logger.warn("Got a solution for l = 2");
+        } else {
+            logger.error("No l-Diversity solution found for l = 2");
         }
     }
 }
