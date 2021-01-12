@@ -1,8 +1,10 @@
 package gr.aegean.msc.dbprivacy.core.business;
 
 import gr.aegean.msc.dbprivacy.core.infra.DbUtils;
+import gr.aegean.msc.dbprivacy.core.model.AnonymizedRecord;
 import gr.aegean.msc.dbprivacy.core.model.CityStateTuple;
 import java.text.DecimalFormat;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +37,11 @@ public class ApplicationAutoRunner {
     public void run(ApplicationReadyEvent event) {
 
         logger.warn("\n*** MSc Information and Communication Systems Security, Aegean Univ., Fall 2020, DB Security ***");
-        logger.warn("\nMembers of the team: \n- Spyridon Ninos\n- Christos Skatharoudis\n- Margarita Bogdanou");
+        logger.warn("\nMembers of the team: \n- Spyridon Ninos (3232020022)\n- Christos Skatharoudis (3232020025)\n- Margarita Bogdanou (3232020021)");
         logger.warn("\nUsing the dataset from: https://www.kaggle.com/ahsen1330/us-police-shootings");
+
+        String generalizationDomainsDescription = generalizationBuilder.describeGeneralizationDomains();
+        logger.warn("\nDescription of the generalization domains used in this program:\n{}", generalizationDomainsDescription);
 
         var totalRecords = dbUtils.getNumOfRecords();
         logger.warn("Loaded {} anonymized records (Identifying: name (excluded), QI: race, gender, age, SA: armed, Insensitive: city)\n", totalRecords);
@@ -80,18 +85,20 @@ public class ApplicationAutoRunner {
 
         var kAnonymizer = new KAnonymity(anonymizedRecords, generalizationBuilder);
 
-        if (kAnonymizer.check(2)) {
-            String msg = String.format("%,2.2f%%", kAnonymizer.getInformationLoss());
-            logger.warn("Got a solution for k = 2, information loss: {}", msg);
-        } else {
-            logger.error("No k-anonymity solution found for k = 2");
+        kAnonymizer.setRoundToModifySet(3);
+        List<AnonymizedRecord> modifiedSet = null;
+        for (int k=1; k<10; k++) {
+            kAnonymizer.check(k);
+            if (k == 3) {
+                modifiedSet = kAnonymizer.getModifiedAnonymizedRecords();
+            }
         }
 
-        var lDiversity = new LDiversity(kAnonymizer.getkAnonymizedData());
-        if (lDiversity.check(2)) {
-            logger.warn("Got a solution for l = 2");
-        } else {
-            logger.error("No l-Diversity solution found for l = 2");
+        logger.warn("\n\n\n\n\n===================================================================\n\n\n\n");
+
+        var kAnonymizer2 = new KAnonymity(modifiedSet, generalizationBuilder, new LDiversity());
+        for (int k=1; k<10; k++) {
+            kAnonymizer2.check(k);
         }
     }
 }

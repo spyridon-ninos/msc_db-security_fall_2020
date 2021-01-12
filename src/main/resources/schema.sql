@@ -15,11 +15,3 @@ CREATE TABLE IF NOT EXISTS shootings (
     body_camera BOOLEAN,
     arms_category VARCHAR(64)
 );
-
-CREATE TABLE IF NOT EXISTS shootings_anon (
-    armed VARCHAR(64), -- SA
-    age VARCHAR(32), -- QI
-    gender VARCHAR(16), -- QI
-    race VARCHAR(64), -- QI
-    city VARCHAR(64) -- QI
-)

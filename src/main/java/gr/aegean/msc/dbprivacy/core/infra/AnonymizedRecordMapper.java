@@ -13,12 +13,13 @@ public final class AnonymizedRecordMapper implements RowMapper<AnonymizedRecord>
     @Override
     public AnonymizedRecord mapRow(final ResultSet rs, final int rowNum) throws SQLException {
 
+        var id = rs.getInt("id");
         var armed = rs.getString("armed");
         var age = rs.getString("age");
         var gender = rs.getString("gender");
         var race = rs.getString("race");
         var city = rs.getString("city");
 
-        return new AnonymizedRecord(armed, age, gender, race, city);
+        return new AnonymizedRecord(id, armed, age, gender, race, city);
     }
 }

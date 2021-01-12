@@ -19,6 +19,7 @@ public final class Utils {
 
     private static AnonymizedRecord copy(AnonymizedRecord record) {
         var copy = new AnonymizedRecord();
+        copy.setId(record.getId());
         copy.setGender(record.getGender());
         copy.setRace(record.getRace());
         copy.setCity(record.getCity());

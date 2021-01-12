@@ -14,19 +14,13 @@ public final class LDiversity {
 
     private final Logger logger = LoggerFactory.getLogger(LDiversity.class);
 
-    private final Map<Integer, List<AnonymizedRecord>> data;
-
-    public LDiversity(Map<Integer, List<AnonymizedRecord>> data) {
-        this.data = data;
-    }
-
-    public boolean check(long l) {
+    public boolean check(long l, Map<Integer, List<AnonymizedRecord>> data) {
 
         if (l < 1) {
             throw new IllegalArgumentException("l in l-Diversity cannot be less than 1. Aborting.");
         }
 
-        logger.warn("Checking dataset for l-diversity with l: {}", l);
+        logger.debug("Checking dataset for l-diversity with l: {}", l);
 
         return data.values()
                    .stream()

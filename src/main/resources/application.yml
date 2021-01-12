@@ -18,7 +18,7 @@ sql:
       SELECT
         count(*)
       FROM
-        shootings_anon
+        shootings
 
     uniqueRecords: >-
       WITH
@@ -32,7 +32,7 @@ sql:
           city,
           count(*) as num_of_records
         FROM
-          shootings_anon
+          shootings
         GROUP BY
           armed,
           age,
@@ -50,25 +50,25 @@ sql:
       SELECT DISTINCT
         armed
       FROM
-        shootings_anon
+        shootings
 
     distinctAgeValues: >-
       SELECT DISTINCT
         age
       FROM
-        shootings_anon
+        shootings
 
     distinctGenderValues: >-
       SELECT DISTINCT
         gender
       FROM
-        shootings_anon
+        shootings
 
     distinctRaceValues: >-
       SELECT DISTINCT
         race
       FROM
-        shootings_anon
+        shootings
 
     distinctCityPerStateValues: >-
       SELECT DISTINCT
@@ -81,24 +81,25 @@ sql:
       SELECT DISTINCT
         city
       FROM
-        shootings_anon
+        shootings
 
     anonymizedRecords: >-
       SELECT
+        id,
         armed,
         age,
         gender,
         race,
         city
       FROM
-        shootings_anon
+        shootings
 
     recordsPerArmedValues: >-
       SELECT
         armed,
         count(*) as numOfRecords
       FROM
-        shootings_anon
+        shootings
       GROUP BY
         armed
       ORDER BY

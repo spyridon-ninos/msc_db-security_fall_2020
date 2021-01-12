@@ -4,11 +4,20 @@ import java.util.Objects;
 
 public final class AnonymizedRecord {
 
+    private long id;
     private String armed;
     private String age;
     private String gender;
     private String race;
     private String city;
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
 
     public String getArmed() {
         return armed;
@@ -53,13 +62,19 @@ public final class AnonymizedRecord {
     public AnonymizedRecord() {
     }
 
+    public AnonymizedRecord(AnonymizedRecord old) {
+        this(old.getId(), old.getArmed(), old.getAge(), old.getGender(), old.getRace(), old.getCity());
+    }
+
     public AnonymizedRecord(
+            final long id,
             final String armed,
             final String age,
             final String gender,
             final String race,
             final String city
     ) {
+        this.id = id;
         this.armed = armed;
         this.age = age;
         this.gender = gender;
@@ -68,29 +83,22 @@ public final class AnonymizedRecord {
     }
 
     @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        final AnonymizedRecord that = (AnonymizedRecord) o;
-        return Objects.equals(armed, that.armed) &&
-                Objects.equals(age, that.age) &&
-                Objects.equals(gender, that.gender) &&
-                Objects.equals(race, that.race) &&
-                Objects.equals(city, that.city);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AnonymizedRecord that = (AnonymizedRecord) o;
+        return id == that.id && Objects.equals(armed, that.armed) && Objects.equals(age, that.age) && Objects.equals(gender, that.gender) && Objects.equals(race, that.race) && Objects.equals(city, that.city);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(armed, age, gender, race, city);
+        return Objects.hash(id, armed, age, gender, race, city);
     }
 
     @Override
     public String toString() {
-        return  "[age='" + age + '\'' +
+        return  "[id='" + id + '\'' +
+                ", age='" + age + '\'' +
                 ", gender='" + gender + '\'' +
                 ", race='" + race + '\'' +
                 ", city='" + city + '\'' +

@@ -179,6 +179,18 @@ public final class GeneralizationBuilder {
         return generalizationStatus.getInformationLoss();
     }
 
+    public String getCurrentGeneralizationLevels() {
+        return generalizationStatus.getCurrentGeneralizationLevels();
+    }
+
+    public String describeGeneralizationDomains() {
+        return generalizationStatus.describeGeneralizationDomains();
+    }
+
+    public void reset() {
+        generalizationStatus.reset();
+    }
+
     public static class GeneralizationStatus {
 
         private final Logger logger = LoggerFactory.getLogger(GeneralizationStatus.class);
@@ -246,6 +258,13 @@ public final class GeneralizationBuilder {
             cityCurrentDomain = 0;
         }
 
+        public void reset() {
+            ageCurrentDomain = 0;
+            genderCurrentDomain = 0;
+            raceCurrentDomain = 0;
+            cityCurrentDomain = 0;
+        }
+
         public boolean isNotFullySuppressed() {
             return ageCurrentDomain < 3 || genderCurrentDomain < 1 || raceCurrentDomain < 2 || cityCurrentDomain < 3;
         }
@@ -263,6 +282,32 @@ public final class GeneralizationBuilder {
                     (double) currentDomains/(double)domainDepths
             );
             return (double) currentDomains/(double)domainDepths;
+        }
+
+        public String getCurrentGeneralizationLevels() {
+            return "age -> " + ageDomains.get(ageCurrentDomain) + "\n" +
+                    "city -> " + cityDomains.get(cityCurrentDomain) + "\n" +
+                    "race -> " + raceDomains.get(raceCurrentDomain) + "\n" +
+                    "gender -> " + genderDomains.get(genderCurrentDomain) + "\n";
+        }
+
+        public String describeGeneralizationDomains() {
+            return "age:\n" +
+                    "L0: 0-10, 11-20, 21-30, 31-40, 41-50, 51-60, 61-70, 71-80, 81-90, 91-100, 100+\n" +
+                    "L1: 0-30, 31-60, 61-90, 90+\n" +
+                    "L2: *\n" +
+                    "\ncity: \n" +
+                    "L0: (all cities in the dataset)\n" +
+                    "L1: (all cities' respective states in the dataset)\n" +
+                    "L2: USA\n" +
+                    "L3: *\n" +
+                    "\nrace:\n" +
+                    "L0: Hispanic, Black, White, Asian, Other\n" +
+                    "L1: North-American\n" +
+                    "L2: *\n" +
+                    "\ngender:\n" +
+                    "L0: M, F\n" +
+                    "L1 *\n";
         }
     }
 }
