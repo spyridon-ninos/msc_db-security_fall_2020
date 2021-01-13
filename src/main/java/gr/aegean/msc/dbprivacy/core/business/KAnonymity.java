@@ -81,12 +81,16 @@ public final class KAnonymity {
             logger.warn("======================================");
             logger.warn("Round {}:", round);
             if (hasStartedProcessing) {
+                logger.warn("Generalizing the dataset");
                 generalizationTaxonomyBuilder.increaseGeneralizationDomain(copiedAnonymizedRecords);
                 logger.debug("Generalized dataset: {}", copiedAnonymizedRecords);
             }
 
+            logger.warn("Generalization levels:\n{}", generalizationTaxonomyBuilder.getCurrentGeneralizationLevels());
 
             kAnonymizedData = splitToEquivalenceClasses(copiedAnonymizedRecords);
+
+            logger.warn("Dataset split to {} equivalent classes", kAnonymizedData.entrySet().size());
 
             long numOfEquivClassWithOne = kAnonymizedData.values()
                                                          .stream()
@@ -100,13 +104,13 @@ public final class KAnonymity {
                                                           .filter(size -> size > 1)
                                                           .count();
 
+            logger.warn("{} classes with 1 element, {} with more than one elements", numOfEquivClassWithOne, numOfEquivClassWithMore);
+
+            String infoLoss = String.format("%,4.2f%%", generalizationTaxonomyBuilder.getInformationLoss()*100);
+            logger.warn("Current information loss: {}", infoLoss);
+
             if (satisfiesAnonymity(k)) {
                 logger.warn("\nIt satisfies {}-anonymity\n", k);
-                logger.warn("Generalization levels:\n{}", generalizationTaxonomyBuilder.getCurrentGeneralizationLevels());
-                logger.warn("Dataset split to {} equivalent classes", kAnonymizedData.entrySet().size());
-                logger.warn("{} classes with 1 element, {} with more than one elements", numOfEquivClassWithOne, numOfEquivClassWithMore);
-                String infoLoss = String.format("%,4.2f%%", generalizationTaxonomyBuilder.getInformationLoss()*100);
-                logger.warn("Current information loss: {}", infoLoss);
 
                 if (lDiversity != null) {
                     for (int l=1; l<=k; l++) {
