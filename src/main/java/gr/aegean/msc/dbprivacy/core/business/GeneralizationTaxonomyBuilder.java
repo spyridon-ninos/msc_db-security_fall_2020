@@ -302,7 +302,7 @@ public final class GeneralizationTaxonomyBuilder {
                     "L2: USA\n" +
                     "L3: *\n" +
                     "\nrace:\n" +
-                    "L0: Hispanic, Black, White, Asian, Other\n" +
+                    "L0: Asian, Black, Hispanic, Native, Other, White\n" +
                     "L1: North-American\n" +
                     "L2: *\n" +
                     "\ngender:\n" +
