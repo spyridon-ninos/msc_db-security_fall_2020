@@ -22,15 +22,15 @@ public class ApplicationAutoRunner {
     private final Logger logger = LoggerFactory.getLogger(ApplicationAutoRunner.class);
 
     private final DbUtils dbUtils;
-    private final GeneralizationBuilder generalizationBuilder;
+    private final GeneralizationTaxonomyBuilder generalizationTaxonomyBuilder;
 
     @Autowired
     public ApplicationAutoRunner(
             DbUtils dbUtils,
-            GeneralizationBuilder generalizationBuilder
+            GeneralizationTaxonomyBuilder generalizationTaxonomyBuilder
     ) {
         this.dbUtils = dbUtils;
-        this.generalizationBuilder = generalizationBuilder;
+        this.generalizationTaxonomyBuilder = generalizationTaxonomyBuilder;
     }
 
     @EventListener
@@ -40,7 +40,7 @@ public class ApplicationAutoRunner {
         logger.warn("\nMembers of the team: \n- Spyridon Ninos (3232020022)\n- Christos Skatharoudis (3232020025)\n- Margarita Bogdanou (3232020021)");
         logger.warn("\nUsing the dataset from: https://www.kaggle.com/ahsen1330/us-police-shootings");
 
-        String generalizationDomainsDescription = generalizationBuilder.describeGeneralizationDomains();
+        String generalizationDomainsDescription = generalizationTaxonomyBuilder.describeGeneralizationDomains();
         logger.warn("\nDescription of the generalization domains used in this program:\n{}", generalizationDomainsDescription);
 
         var totalRecords = dbUtils.getNumOfRecords();
@@ -83,7 +83,7 @@ public class ApplicationAutoRunner {
 
         var anonymizedRecords = dbUtils.getAnonymizedRecords();
 
-        var kAnonymizer = new KAnonymity(anonymizedRecords, generalizationBuilder);
+        var kAnonymizer = new KAnonymity(anonymizedRecords, generalizationTaxonomyBuilder);
 
         kAnonymizer.setRoundToModifySet(3);
         List<AnonymizedRecord> modifiedSet = null;
@@ -96,7 +96,7 @@ public class ApplicationAutoRunner {
 
         logger.warn("\n\n\n\n\n===================================================================\n\n\n\n");
 
-        var kAnonymizer2 = new KAnonymity(modifiedSet, generalizationBuilder, new LDiversity());
+        var kAnonymizer2 = new KAnonymity(modifiedSet, generalizationTaxonomyBuilder, new LDiversity());
         for (int k=1; k<10; k++) {
             kAnonymizer2.check(k);
         }

@@ -18,7 +18,7 @@ public final class KAnonymity {
     private final Logger logger = LoggerFactory.getLogger(KAnonymity.class);
 
     private final List<AnonymizedRecord> anonymizedRecords;
-    private final GeneralizationBuilder generalizationBuilder;
+    private final GeneralizationTaxonomyBuilder generalizationTaxonomyBuilder;
     private final LDiversity lDiversity;
 
     private Map<Integer, List<AnonymizedRecord>> kAnonymizedData;
@@ -41,17 +41,17 @@ public final class KAnonymity {
                        .orElse(Collections.emptyList());
     }
 
-    public KAnonymity(List<AnonymizedRecord> anonymizedRecords, GeneralizationBuilder generalizationBuilder) {
-        this(anonymizedRecords, generalizationBuilder, null);
+    public KAnonymity(List<AnonymizedRecord> anonymizedRecords, GeneralizationTaxonomyBuilder generalizationTaxonomyBuilder) {
+        this(anonymizedRecords, generalizationTaxonomyBuilder, null);
     }
 
     public KAnonymity(
             List<AnonymizedRecord> anonymizedRecords,
-            GeneralizationBuilder generalizationBuilder,
+            GeneralizationTaxonomyBuilder generalizationTaxonomyBuilder,
             LDiversity lDiversity
     ) {
         this.anonymizedRecords = anonymizedRecords;
-        this.generalizationBuilder = generalizationBuilder;
+        this.generalizationTaxonomyBuilder = generalizationTaxonomyBuilder;
         this.lDiversity = lDiversity;
     }
 
@@ -74,23 +74,19 @@ public final class KAnonymity {
 
         int round = 1;
         var copiedAnonymizedRecords = copy(anonymizedRecords);
-        generalizationBuilder.reset();
+        generalizationTaxonomyBuilder.reset();
         boolean hasStartedProcessing = false;
 
         do {
             logger.warn("======================================");
             logger.warn("Round {}:", round);
             if (hasStartedProcessing) {
-                logger.warn("Generalizing the dataset");
-                generalizationBuilder.increaseGeneralizationDomain(copiedAnonymizedRecords);
+                generalizationTaxonomyBuilder.increaseGeneralizationDomain(copiedAnonymizedRecords);
                 logger.debug("Generalized dataset: {}", copiedAnonymizedRecords);
             }
 
-            logger.warn("Generalization levels:\n{}", generalizationBuilder.getCurrentGeneralizationLevels());
 
             kAnonymizedData = splitToEquivalenceClasses(copiedAnonymizedRecords);
-
-            logger.warn("Dataset split to {} equivalent classes", kAnonymizedData.entrySet().size());
 
             long numOfEquivClassWithOne = kAnonymizedData.values()
                                                          .stream()
@@ -104,17 +100,19 @@ public final class KAnonymity {
                                                           .filter(size -> size > 1)
                                                           .count();
 
-            logger.warn("{} classes with 1 element, {} with more than one elements", numOfEquivClassWithOne, numOfEquivClassWithMore);
-
-            String infoLoss = String.format("%,4.2f%%", generalizationBuilder.getInformationLoss()*100);
-            logger.warn("Current information loss: {}", infoLoss);
-
             if (satisfiesAnonymity(k)) {
                 logger.warn("\nIt satisfies {}-anonymity\n", k);
+                logger.warn("Generalization levels:\n{}", generalizationTaxonomyBuilder.getCurrentGeneralizationLevels());
+                logger.warn("Dataset split to {} equivalent classes", kAnonymizedData.entrySet().size());
+                logger.warn("{} classes with 1 element, {} with more than one elements", numOfEquivClassWithOne, numOfEquivClassWithMore);
+                String infoLoss = String.format("%,4.2f%%", generalizationTaxonomyBuilder.getInformationLoss()*100);
+                logger.warn("Current information loss: {}", infoLoss);
 
                 if (lDiversity != null) {
                     for (int l=1; l<=k; l++) {
-                        logger.warn("Checking for l-Diversity with l = {}: {}", l, lDiversity.check(l, kAnonymizedData));
+                        if (lDiversity.check(l, kAnonymizedData)) {
+                            logger.warn("The set is {}-diverse", l);
+                        }
                     }
                 }
 
@@ -130,7 +128,7 @@ public final class KAnonymity {
 
             round++;
             hasStartedProcessing = true;
-        } while(generalizationBuilder.isNotFullySuppressed());
+        } while(generalizationTaxonomyBuilder.isNotFullySuppressed());
 
         return false;
     }
@@ -179,7 +177,7 @@ public final class KAnonymity {
     }
 
     public double getInformationLoss() {
-        return generalizationBuilder.getInformationLoss();
+        return generalizationTaxonomyBuilder.getInformationLoss();
     }
 
     private void modifySet(Map<Integer, List<AnonymizedRecord>> kAnonymizedData) {

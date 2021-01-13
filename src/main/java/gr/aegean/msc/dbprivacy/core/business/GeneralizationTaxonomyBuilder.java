@@ -15,15 +15,15 @@ import org.springframework.stereotype.Component;
  * we provide
  */
 @Component
-public final class GeneralizationBuilder {
+public final class GeneralizationTaxonomyBuilder {
 
-    private final Logger logger = LoggerFactory.getLogger(GeneralizationBuilder.class);
+    private final Logger logger = LoggerFactory.getLogger(GeneralizationTaxonomyBuilder.class);
 
     private final List<CityStateTuple> cityStateTuples;
     private final GeneralizationStatus generalizationStatus;
 
     @Autowired
-    public GeneralizationBuilder(DbUtils dbUtils) {
+    public GeneralizationTaxonomyBuilder(DbUtils dbUtils) {
         cityStateTuples = dbUtils.getDistinctCityStateValues();
         generalizationStatus = new GeneralizationStatus();
     }

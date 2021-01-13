@@ -24,6 +24,7 @@ public final class LDiversity {
 
         return data.values()
                    .stream()
+                   .parallel()
                    .allMatch(equivClass -> isLDiverse(equivClass, l));
     }
 
@@ -48,8 +49,8 @@ public final class LDiversity {
                               .allMatch(value -> {
                                   double occurrence =  value/((double) equivalenceClass.size());
                                   double probability = 1.0/l;
-                                  logger.debug("value: {}, ecSize: {}, occurrence: {}, probability: {}", value, equivalenceClass.size(), occurrence, probability);
-                                  return occurrence >= probability;
+                                  logger.debug("count: {}, ecSize: {}, occurrence: {}, probability: {}", value, equivalenceClass.size(), occurrence, probability);
+                                  return occurrence <= probability;
                               });
     }
 
